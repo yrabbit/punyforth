@@ -198,6 +198,12 @@ defprimitive "execute",7,execute,REGULAR
     ldr r1, [r0]
     mov pc, r1
 
+// this exit primitive is only used by the compiler, this is used for detecting word endings works some as regular exit
+defprimitive "<exit>",6,end_word,REGULAR 
+    ldr r7, [r6]
+    add r6, #CELLS
+    NEXT
+
 defprimitive "exit",4,exit,REGULAR
     ldr r7, [r6]
     add r6, #CELLS

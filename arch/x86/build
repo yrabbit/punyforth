@@ -11,6 +11,7 @@ cat ../../generic/forth/core.forth \
     ../../generic/forth/ringbuf.forth \
     ../../generic/forth/ringbuf_test.forth \
     ../../generic/forth/test.forth \
+    ../../generic/forth/decompiler.forth \
     $GREET \
     /dev/stdin \
     | ./punyforth

@@ -194,6 +194,12 @@ defprimitive "j",1,j,REGULAR
 defprimitive "execute",7,execute,REGULAR
     pop eax
     jmp [eax]
+    
+// this exit primitive is only used by the compiler, this is used for detecting word endings works some as regular exit
+defprimitive "<exit>",6,end_word,REGULAR 
+    mov esi, [ebp]
+    add ebp, CELLS
+    NEXT
 
 defprimitive "exit",4,exit,REGULAR
     mov esi, [ebp]

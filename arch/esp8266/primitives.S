@@ -252,6 +252,11 @@ defprimitive "execute",7,execute,REGULAR
     l32i a9, a8, 0                      // fetch codeword the same way as the inner interpreter does
     jx a9  
 
+// this exit primitive is only used by the compiler, this is used for detecting word endings works some as regular exit
+defprimitive "<exit>",6,end_word,REGULAR 
+    RPOP a14                            // pop forth PC from the return stack
+    NEXT
+
 defprimitive "exit",4,exit,REGULAR
     RPOP a14                            // pop forth PC from the return stack
     NEXT
