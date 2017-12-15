@@ -131,9 +131,7 @@ variable: idx
     begin
         last-refresh @ 0= expired? or if            
             ms@ last-refresh !            
-            { show } catch ?dup 0<> if 
-                error-draw 
-            then            
+            { show } catch ?dup if error-draw then            
         then
         pause
     again ;

@@ -4,13 +4,7 @@ variable: server
 
 : measure ( -- temperature humidity | throws:EGAVEUP )
     10 0 do
-        ['] dht-measure catch ?dup 0<> 
-        if
-            ex-type cr
-            5000 ms
-        else
-            unloop exit
-        then
+        ['] dht-measure catch ?dup if ex-type cr 5000 ms else unloop exit then
     loop
     EGAVEUP throw ;
 
@@ -19,7 +13,7 @@ variable: server
 : dispose ( -- ) server @ netcon-dispose ;
 : send ( -- ) server @ data 4 netcon-write-buf ;
 : log ( temperature humidity -- ) data! connect ['] send catch dispose throw ;
-: log-measurement ( -- ) { measure log } catch ?dup 0<> if ex-type cr then ;
+: log-measurement ( -- ) { measure log } catch ?dup if ex-type cr then ;
 : main ( -- ) log-measurement 50 ms 120000000 deep-sleep ;
     
 ' boot is: main

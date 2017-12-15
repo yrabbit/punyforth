@@ -6,11 +6,7 @@ defer: boot
 
 : dst ( -- n ) 16r51000 SIZE + ;
 : heap-size ( -- n ) usedmem align ;
-: check ( code -- | ETURNKEY )
-    ?dup 0<> if
-        print: 'SPI FLASH ERROR: ' . cr
-        ETURNKEY throw
-    then ;
+: check ( code -- | ETURNKEY ) ?dup if print: 'SPI FLASH ERROR: ' . cr ETURNKEY throw then ;
 
 : n, ( addr n -- addr+strlen ) over >r >str r> dup strlen + ;
 : s, ( str-dst str-src -- str-dst+strlen ) tuck strlen 2dup + { cmove } dip ;

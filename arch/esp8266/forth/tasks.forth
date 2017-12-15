@@ -28,11 +28,8 @@ INTERPRETER init-variable: var-current-task
 : current-task ( -- task ) var-current-task @ ;
 : current-task! ( task -- ) var-current-task ! ;
 
-: alloc-data-stack ( -- a )
-    var-task-stack-size @ allot here ;
-
-: alloc-return-stack ( -- a )
-    var-task-rstack-size @ allot here ;
+: alloc-data-stack ( -- a ) var-task-stack-size @ allot here ;
+: alloc-return-stack ( -- a ) var-task-rstack-size @ allot here ;
 
 : task: ( user-space-size "name" ) ( -- task )
     create:
@@ -48,12 +45,7 @@ INTERPRETER init-variable: var-current-task
         dup .rp @ over .r0 !                 \ init r0 = top of rstack address
         last-task! ;                         \ last-task = this
 
-: task-choose-next ( -- )    
-    current-task
-    begin        
-        .next @ dup
-        .status @ PAUSED =
-    until ;
+: task-choose-next ( -- ) current-task begin .next @ dup .status @ PAUSED = until ;
 
 : task-save-context ( sp ip rp -- ) \ XXX temporal coupling
     current-task .rp !
@@ -72,8 +64,7 @@ INTERPRETER init-variable: var-current-task
 
 : task-user-space ( task -- a ) Task + ;
 
-: user-space ( -- a )
-    current-task task-user-space ;
+: user-space ( -- a ) current-task task-user-space ;
 
 defer: pause
 
@@ -100,8 +91,7 @@ defer: pause
     SKIPPED swap .status ! 
     task-choose-next task-run ;
 
-: deactivate ( -- )
-    current-task stop ;
+: deactivate ( -- ) current-task stop ;
 
 : task-find ( task -- link )
     lastword

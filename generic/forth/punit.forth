@@ -70,11 +70,9 @@ marker: -punit
     test-reset
     lastword
     begin
-        dup 0<>
+        dup
     while
-        dup test? if
-            dup test-run
-        then
+        dup test? if dup test-run then
         @
     repeat
     drop
