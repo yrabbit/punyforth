@@ -83,8 +83,8 @@ marker: -punit
 \ Runs a single unit tests then prints out the test report.
 : test: ( "testname" -- )
     cr test-reset
-    word find dup 0<> if
+    word find ?dup if
         test-run
     else
-        drop println: "No such test"
+        println: "No such test"
     then ;

@@ -106,7 +106,7 @@ defer: pause
 : task-find ( task -- link )
     lastword
     begin
-        dup 0<>
+        dup
     while
         2dup
         link>body cell + = if \ XXX skip behaviour pointer
@@ -119,10 +119,10 @@ defer: pause
 : tasks-print ( -- )
     current-task
     begin
-        dup task-find dup 0<> if
+        dup task-find ?dup if
             link-type cr
         else
-            drop println: "interpreter"
+            println: "interpreter"
         then
         .next @ dup
         current-task =
@@ -132,16 +132,8 @@ defer: pause
 : semaphore: ( -- ) init-variable: ;
 : mutex: ( -- ) 1 semaphore: ;
 
-: wait ( semaphore -- )
-    begin
-        pause
-        dup @ 0<>
-    until
-    -1 swap +! ;
-
-: signal ( semaphore -- )
-    1 swap +! 
-    pause ;
+: wait ( semaphore -- ) begin pause dup @ until -1 swap +! ; 
+: signal ( semaphore -- ) 1 swap +!  pause ;
  
 : multi-handler ( -- a ) current-task .handler ;
 

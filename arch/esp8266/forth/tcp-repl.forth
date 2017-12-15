@@ -9,7 +9,7 @@ wifi-ip constant: HOST
 0 task: repl-worker-task
 
 : type-composite ( str -- )
-    client @ 0<> if
+    client @ if
         client @ swap netcon-write
     else
         _type
@@ -18,7 +18,7 @@ wifi-ip constant: HOST
 2 buffer: emit-buf 0 emit-buf 1+ c!
 
 : emit-composite ( char -- )
-    client @ 0<> if
+    client @ if
         emit-buf c!
         client @ emit-buf netcon-write
     else
@@ -53,9 +53,7 @@ wifi-ip constant: HOST
         client @ 128 line netcon-readln -1 <>
         line "quit" =str invert and
     while
-        line strlen 0<> if
-            line eval
-        then
+        line strlen if line eval then
     repeat ;
         
 : worker ( task -- )
