@@ -45,14 +45,20 @@
 : ? ( a -- ) @ . ;
 
 : unloop r> r> r> 2drop >r ;
-: do immediate compile-time ['] swap , ['] >r , ['] >r , here ; \ prepare backref
+: do immediate compile-time ['] swap , ['] >r , ['] >r , 0 ( do ) here ( backref ) ;
+: ?do immediate compile-time
+    ['] 2dup , ['] swap , ['] >r , ['] >r , 
+    ['] <> , ['] branch0 , prepare-forward-ref 
+    1 ( ?do ) here ( backref ) ;
 
 : bounds ( start len -- limit start ) over + swap ;
 
 : loop immediate compile-time
     ['] r> , ['] 1+ , ['] >r ,
     ['] i , ['] rp@ , ['] cell , ['] + , ['] @ , \ index limit
-    ['] >= , ['] branch0 , backref,
+    ['] >= , 
+    ['] branch0 , backref, 
+    if ( ?do ) resolve-forward-ref then
     ['] unloop , ;
 
 : end? ( increment -- bool )
@@ -63,7 +69,9 @@
 : +loop immediate compile-time     
     ['] dup ,                      \ increment
     ['] rp@ , ['] +! ,    
-    ['] end? , ['] branch0 , backref,
+    ['] end? , 
+    ['] branch0 , backref, 
+    if ( ?do ) resolve-forward-ref then
     ['] unloop , ;
 
 : while immediate compile-time ['] branch0 , prepare-forward-ref ;
@@ -321,7 +329,7 @@ defer: r0 ' r0 is: _r0
         space sp@ i cells + @ .
     -1 +loop ;
 
-: stack-clear ( i*x -- ) begin depth 0<> while drop repeat ;
+: stack-clear ( i*x -- ) begin depth while drop repeat ;
 
 : stack-show ( -- )
     {
@@ -349,11 +357,7 @@ defer: r0 ' r0 is: _r0
         rp@ i cells + @                    \ i. return address
         lastword    
         begin 2dup < over 0<> and while @ repeat
-        ?dup 0<> if 
-            link-type space 
-        else 
-            print: '??? ' 
-        then
+        ?dup if link-type space else print: '??? ' then
         $( emit . $) emit cr
     loop
     depth 0> if print: '(stack' stack-print $) emit then

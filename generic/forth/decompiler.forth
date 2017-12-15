@@ -1,6 +1,10 @@
 ' TRUE @ constant: entercons
 ' var-handler @ constant: entervar
+: ++ ( var -- ) 1 swap +! ;
+: endword? ( addr -- bool ) @ ['] <exit> = ;
+: >link ( xt -- link | 0 ) lastword begin ?dup while 2dup link>xt = if nip exit then @ repeat drop 0 ;
 
+( Hex address conversion )
 8 byte-array: num
 : clear ( -- ) 8 0 do $0 i num c! loop ;
 : /%16 ( n -- q r ) dup 4 rshift swap 15 and ;
@@ -8,15 +12,59 @@
 : hex ( n -- ) clear 8 0 do /%16 digit 7 i - num c! ?dup 0= if unloop exit then loop ;
 : .h ( n -- ) print: '16r' hex 0 num 8 type-counted ;
 
-: separator $: emit space space ;
-: xt>link ( xt -- link | 0 ) lastword begin ?dup while 2dup link>xt = if nip exit then @ repeat drop 0 ;
-: xt-type ( xt -- ) dup xt>link ?dup if link-type drop else . then ;
+( Arrows between jump locations )
+10 constant: MAX
+MAX array: jumps
+MAX 4 * 1+ constant: LEN
+LEN buffer: arrow
+variable: rownum
+variable: idx
+: sort ( n n -- n n ) 2dup > if swap then ;
+: pack ( n n -- n ) sort 16 lshift or ;
+: unpack ( n -- n n ) dup 16rFFFF and swap 16 rshift ;
+: at ( i -- n n ) jumps @ unpack ;
+: add ( row1 row2 -- ) idx @ MAX < if pack idx @ jumps ! idx ++ else 2drop then ;
+: jump? ( addr -- bool ) @ dup ['] branch0 = swap ['] branch = or ;
+: positions ( branch-addr -- row1 row2 ) cell + @ cell / rownum @ 1+ + rownum @ ;
 
-: line ( addr -- ) dup .h separator @ xt-type cr ;
-: endword? ( addr -- bool ) @ ['] <exit> = ;
+: collect-jumps ( xt -- ) 
+    0 idx ! 1 rownum !
+    begin
+        cell + dup jump? if dup positions add then 
+        rownum ++ 
+        dup endword? 
+    until 
+    1 rownum ! drop ;
+
+: head? ( n n -- bool ) rownum @ = swap rownum @ = or ; \ arrow head
+: head ( -- )
+    idx @ 0 ?do 
+        i at head? if 
+            $< i 1+ 4 * 3 - arrow + c!
+            $- i 1+ 4 * 2 - arrow + c!
+        then 
+    loop ;
+: body? ( n n -- bool ) rownum @ > swap rownum @ < and ;
+: body ( -- ) idx @ 0 ?do i at body? if $| i 1+ 4 * 1- arrow + c! then loop ; \ arrow body
+: clear ( -- ) LEN 0 do 32 i arrow + c! loop ;
+: .arrow ( -- ) clear body head arrow LEN type-counted cr ;
+
+variable: longest
+: update ( link -- ) link>len longest @ max longest ! ;
+: find-longest ( xt -- ) 10 longest ! begin cell + dup @ >link ?dup if update then dup endword? until drop ;
+: spaces ( n -- ) 0 ?do 32 emit loop ;
+: pad ( word-len -- ) longest @ swap - spaces ;
+
+( Decompiler )
+: separator $: emit space space ;
+: .link ( link -- ) dup link-type link>len pad ;
+: .n ( n -- ) here swap >str here type here strlen pad ;
+: .xt ( xt -- ) dup >link ?dup if .link drop else .n then ;
+
+: row ( addr -- ) dup .h separator @ .xt .arrow rownum ++ ;
 : header ( xt -- ) .h separator println: '<entercol>' ;
-: body ( xt -- ) begin cell + dup line dup endword? until drop ;
-: colon ( xt -- ) dup header body ;
+: body ( xt -- ) begin cell + dup row dup endword? until drop ;
+: colon ( xt -- ) dup collect-jumps dup find-longest dup header body ;
 
 : header ( xt -- ) dup .h separator print: '<enterdoes> dataptr: ' 2 cells + .h cr ;
 : does ( xt -- ) dup header println: 'behavior:' cell + @ ( behaviorptr ) cell - body ;
