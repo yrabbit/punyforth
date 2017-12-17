@@ -12,16 +12,16 @@ struct
     cell field: .handler
 constant: Task
 
-here Task allot constant: INTERPRETER
-INTERPRETER INTERPRETER .next !
-SKIPPED INTERPRETER .status !
-_s0 INTERPRETER .s0 !
-_r0 INTERPRETER .r0 !
+here Task allot constant: REPL
+REPL REPL .next !
+SKIPPED REPL .status !
+_s0 REPL .s0 !
+_r0 REPL .r0 !
 
 112 init-variable: task-stack-size
 112 init-variable: task-rstack-size
-INTERPRETER init-variable: last
-INTERPRETER init-variable: current
+REPL init-variable: last
+REPL init-variable: current
 
 : alloc-stack  ( -- a ) task-stack-size  @ allot here ;
 : alloc-rstack ( -- a ) task-rstack-size @ allot here ;
@@ -86,8 +86,7 @@ defer: pause
     begin
         dup
     while
-        2dup
-        link>body cell + = if nip exit then \ XXX skip behaviour pointer
+        2dup link>body cell + = if nip exit then \ XXX skip behaviour pointer
         @
     repeat
     2drop 0 ;
@@ -95,19 +94,13 @@ defer: pause
 : tasks-print ( -- )
     current @
     begin
-        dup task-find ?dup if
-            link-type cr
-        else
-            println: "interpreter"
-        then
-        .next @ dup
-        current @ =
+        dup task-find ?dup if link-type cr else println: "interpreter" then
+        .next @ dup current @ =
     until
     drop ;
    
 : semaphore: ( -- ) init-variable: ;
 : mutex: ( -- ) 1 semaphore: ;
-
 : wait ( semaphore -- ) begin pause dup @ until -1 swap +! ; 
 : signal ( semaphore -- ) 1 swap +!  pause ;
  
