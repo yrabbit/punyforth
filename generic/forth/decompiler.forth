@@ -19,13 +19,12 @@ MAX 4 * 1+ constant: LEN
 LEN buffer: arrow
 variable: rownum
 variable: idx
-: sort ( n n -- n n ) 2dup > if swap then ;
-: pack ( n n -- n ) sort 16 lshift or ;
+: pack ( n n -- n ) 16 lshift or ;
 : unpack ( n -- n n ) dup 16rFFFF and swap 16 rshift ;
-: at ( i -- n n ) jumps @ unpack ;
-: add ( row1 row2 -- ) idx @ MAX < if pack idx @ jumps ! idx ++ else 2drop then ;
+: at ( i -- dst-row src-row ) jumps @ unpack ;
+: add ( dst-row src-row -- ) idx @ MAX < if pack idx @ jumps ! idx ++ else 2drop then ;
 : jump? ( addr -- bool ) @ dup ['] branch0 = swap ['] branch = or ;
-: positions ( branch-addr -- row1 row2 ) cell + @ cell / rownum @ 1+ + rownum @ ;
+: positions ( branch-addr -- dst-row src-row ) cell + @ cell / rownum @ 1+ + rownum @ ;
 
 : collect-jumps ( xt -- ) 
     0 idx ! 1 rownum !
@@ -36,15 +35,14 @@ variable: idx
     until 
     1 rownum ! drop ;
 
-: head? ( n n -- bool ) rownum @ = swap rownum @ = or ; \ arrow head
 : head ( -- )
     idx @ 0 ?do 
-        i at head? if 
-            $< i 1+ 4 * 3 - arrow + c!
-            $- i 1+ 4 * 2 - arrow + c!
-        then 
+        i at ( dst-row src-row )
+        rownum @ = if $- i 1+ 4 * 3 - arrow + c!  $> i 1+ 4 * 2 - arrow + c! then 
+        rownum @ = if $< i 1+ 4 * 3 - arrow + c!  $- i 1+ 4 * 2 - arrow + c! then 
     loop ;
-: body? ( n n -- bool ) rownum @ > swap rownum @ < and ;
+: sort ( n n -- n n ) 2dup > if swap then ;
+: body? ( n n -- bool ) sort rownum @ > swap rownum @ < and ;
 : body ( -- ) idx @ 0 ?do i at body? if $| i 1+ 4 * 1- arrow + c! then loop ; \ arrow body
 : clear ( -- ) LEN 0 do 32 i arrow + c! loop ;
 : .arrow ( -- ) clear body head arrow LEN type-counted cr ;
