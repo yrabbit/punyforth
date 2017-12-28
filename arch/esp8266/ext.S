@@ -28,6 +28,15 @@ defprimitive "readchar-nowait",15,readchar_nowait,REGULAR /* ( -- char | -1 ) */
     DPUSH a2
     NEXT
 
+defprimitive "load",4,load,REGULAR
+    DPOP a2			// source code address on flash
+    CCALL forth_load
+    NEXT
+
+defprimitive "/end",4,end_load,REGULAR
+    CCALL forth_end_load
+    NEXT
+
 defprimitive "over",4,over,REGULAR /* ( a b -- a b a ) */
     READTOS2 a8
     DPUSH a8

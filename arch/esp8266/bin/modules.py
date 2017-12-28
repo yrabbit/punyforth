@@ -133,8 +133,8 @@ class Uber:
         contents = [open(each).read() for each in module_paths(self.modules)]
         if self.app:
             with open(self.app) as f: contents.append(f.read())
-        contents.append('\nstack-show ')
-        contents.append(chr(0))
+        contents.append('\nstack-show')
+        contents.append('\n/end\n')
         return '\n'.join(contents)
     
     def pad(self, uber):
