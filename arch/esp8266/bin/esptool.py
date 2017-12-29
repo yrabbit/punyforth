@@ -432,7 +432,6 @@ class BaseFirmwareImage(object):
 
     def append_checksum(self, f, checksum):
         """ Append ESPROM checksum to the just-written image """
-	print '555'
         align_file_position(f, 16)
         f.write(struct.pack('B', checksum))
 
