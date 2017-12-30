@@ -33,6 +33,11 @@ defprimitive "load",4,load,REGULAR
     CCALL forth_load
     NEXT
 
+defprimitive "loading?",8,loading,REGULAR
+    CCALL forth_loading
+    DPUSH a2
+    NEXT
+
 defprimitive "/end",4,end_load,REGULAR
     CCALL forth_end_load
     NEXT

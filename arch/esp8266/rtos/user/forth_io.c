@@ -7,28 +7,60 @@
 #define BUFFER_SIZE 1024 // should be multiple of 4
 bool loading = false;
 char *buffer = NULL;
-int buffer_offset = -1;
-uint32_t source_code_address;
+int buffer_offset;
+uint32_t source_address;
+
+void err(char *msg) {
+    printf(msg);
+    sdk_system_restart();
+}
+
+uint32_t stack[8];
+int sp = 0;
+bool empty() { return sp == 0; }
+bool full()  { return sp >= 8; }
+void push(int e) {
+    if (full()) err("Overflow while loading\n");
+    stack[sp++] = e;
+}
+int pop() {
+    if (empty()) err("Underflow while loading\n");
+    return stack[--sp];
+}
 
 void forth_load(uint32_t address) {
-    source_code_address = address;
+    //printf("Loading 16r%x\n", address);
+    if (buffer == NULL) buffer = malloc(BUFFER_SIZE);
+    buffer_offset = -1;
+    if (loading) push(source_address);
+    source_address = address;
     loading = true;
 }
 
+bool forth_loading() {
+    return loading;
+}
+
 void forth_end_load() {
-    printf("Punyforth ready.\n");
-    loading = false;
-    free(buffer);
-    buffer = NULL;
+    if (!empty()) {
+        loading = false;
+        forth_load(pop());
+    } else {
+        loading = false;
+        free(buffer);
+        buffer = NULL;
+        printf("\n");
+    }
 }
 
 int next_char_from_flash() { // read source stored code from flash memory
-    if (buffer == NULL) buffer = malloc(BUFFER_SIZE);
     if (buffer_offset < 0 || buffer_offset >= BUFFER_SIZE) {
-        sdk_spi_flash_read(source_code_address, (void *) buffer, BUFFER_SIZE);
-        source_code_address += BUFFER_SIZE;
+        //printf("Reading 16r%x\n", source_address);
+        printf(".");
+        sdk_spi_flash_read(source_address, (void *) buffer, BUFFER_SIZE);
         buffer_offset = 0;
     }
+    source_address++;
     return buffer[buffer_offset++];
 }
 
