@@ -1,3 +1,5 @@
+SSD1306SPI load
+
 BUFFER_SIZE buffer: screen2
 
 : xchg-screen ( -- )

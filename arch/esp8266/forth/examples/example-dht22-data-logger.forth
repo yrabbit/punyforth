@@ -1,3 +1,7 @@
+DHT22   load
+NETCON  load
+TURNKEY load
+
 exception: EGAVEUP
 variable: data
 variable: server

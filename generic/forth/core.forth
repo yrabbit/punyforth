@@ -334,6 +334,7 @@ defer: r0 ' r0 is: _r0
 : stack-show ( -- )
     {
         depth 0< if EUNDERFLOW throw then
+        loading? if exit then
         interpret? if        
             print: '(stack' stack-print $) emit space
         else
@@ -364,3 +365,6 @@ defer: r0 ' r0 is: _r0
     abort ; 
 
 ' unhandled is: traceback
+
+/end
+

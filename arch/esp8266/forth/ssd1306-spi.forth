@@ -1,3 +1,5 @@
+GPIO load
+
 \ ssd1306 SPI display driver
 
 \ define the wiring
@@ -34,10 +36,7 @@ screen1 init-variable: actual
     DC  GPIO_LOW gpio-write
     RST GPIO_LOW gpio-write ;
 
-: check-write-result ( code -- | ESSD1306_WRITE )
-    255 <> if 
-        ESSD1306_WRITE throw 
-    then ;
+: check-write-result ( code -- | ESSD1306_WRITE ) 255 <> if ESSD1306_WRITE throw then ;
 
 : write-command ( cmd -- | ESSD1306_WRITE ) 
     DC GPIO_LOW gpio-write
@@ -228,3 +227,6 @@ screen1 init-variable: actual
     drop ;
     
 : str-width ( str -- ) strlen 8 * font-size @ * ;
+
+/end
+

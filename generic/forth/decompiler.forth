@@ -84,3 +84,6 @@ variable: longest
         entervar  of var   endof
         drop ( codeword ) println: 'primitive:' @ 8 dump
     endcase ;
+
+/end
+

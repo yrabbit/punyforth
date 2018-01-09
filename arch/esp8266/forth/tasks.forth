@@ -117,3 +117,6 @@ defer: pause
     ['] pause is: nop ;
 
 single
+
+/end
+

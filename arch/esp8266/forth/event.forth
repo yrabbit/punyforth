@@ -1,3 +1,5 @@
+TASKS load
+
 struct
     cell field: .type
     cell field: .ms
@@ -15,3 +17,6 @@ constant: Event
         pause
     repeat 
     drop ;
+
+/end
+

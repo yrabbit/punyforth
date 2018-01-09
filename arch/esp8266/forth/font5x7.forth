@@ -255,3 +255,6 @@ create: font5x7
     16r00 c, 16r19 c, 16r1D c, 16r17 c, 16r12 c,
     16r00 c, 16r3C c, 16r3C c, 16r3C c, 16r3C c,
     16r00 c, 16r00 c, 16r00 c, 16r00 c, 16r00 c,
+
+/end
+

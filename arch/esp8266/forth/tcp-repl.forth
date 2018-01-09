@@ -1,3 +1,7 @@
+NETCON  load
+WIFI    load
+MAILBOX load
+
 wifi-ip constant: HOST
 1983 constant: PORT
     
@@ -77,3 +81,6 @@ wifi-ip constant: HOST
     ['] emit-composite xemit !
     repl-server-task server
     repl-worker-task worker ;
+
+/end
+

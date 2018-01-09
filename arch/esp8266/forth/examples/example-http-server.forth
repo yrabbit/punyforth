@@ -1,3 +1,7 @@
+NETCON  load
+WIFI    load
+MAILBOX load
+
 \ server listens on this port
 80 constant: PORT
 wifi-ip constant: HOST
@@ -70,3 +74,6 @@ Connection: close\r\n
     worker-task2 worker ;
 
 start-http-server
+
+/end
+

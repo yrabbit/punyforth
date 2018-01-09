@@ -1,3 +1,4 @@
+GPIO load
 \ playing sound with a passive buzzer
 
 129 constant: cL

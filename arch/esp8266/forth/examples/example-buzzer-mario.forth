@@ -1,3 +1,5 @@
+GPIO load
+
 \ playing sound with a passive buzzer
 523 constant: C
 554 constant: C1

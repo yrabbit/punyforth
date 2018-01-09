@@ -1,3 +1,5 @@
+TASKS load
+
 1 constant: UDP
 2 constant: TCP
 
@@ -131,7 +133,7 @@ exception: ERTIMEOUT ( indicates read timeout )
     EOVERFLOW throw ;    
     
 \ Close then dispose the given socket.
-: netcon-dispose ( netcon -- )
-    dup
-    netcon-close
-    netcon-delete ;
+: netcon-dispose ( netcon -- ) dup netcon-close netcon-delete ;
+
+/end
+

@@ -1,43 +1,27 @@
-0 constant: FLASH_OK
-1 constant: FLASH_ERR
-2 constant: FLASH_TIMEOUT
-3 constant: FLASH_UNKNOWN
-
-( blocks )
-
 exception: EBLOCK
 4096       constant:      SIZE
-16r51000   init-variable: block0
 FALSE      init-variable: dirty
 SIZE       buffer:        buf
 variable:  offs
 
-: check-err ( code -- | EBLOCK )
-    dup FLASH_OK <> if
-        print: 'SPI FLASH ERROR: ' . cr
-        EBLOCK throw 
-    then 
-    drop ;
-
-: >sector ( block# -- sector# ) SIZE / ;
+: check ( code -- | 0=OK,1=ERR,2=TIMEOUT,3=UNKNOWN ) ?dup if print: 'FLASH ERR: ' . cr EBLOCK throw then ; 
+: >sector ( block# -- sector# ) 12 rshift ( SIZE / ) ;
     
 : flush ( -- )
     dirty @ if
-        offs @ >sector erase-flash  check-err
-        SIZE buf offs @ write-flash check-err
+        offs @ >sector erase-flash  check
+        SIZE buf offs @ write-flash check
         FALSE dirty !
     then ;
     
 : block ( block# -- addr )
     flush
-    SIZE * block0 @ + offs !
-    SIZE buf offs @ read-flash check-err
+    12 lshift ( SIZE * ) offs !
+    SIZE buf offs @ read-flash check
     FALSE dirty !
     buf ;
     
-: update ( -- ) TRUE dirty ! ;
-
-( screen editor )
+( screen editor requires to flash with --block-format yes )
 
 128 constant: COLS
 32  constant: ROWS
@@ -58,13 +42,9 @@ variable:  offs
     COLS 2 - 0 do 32 over i ch c! loop
     13 over COLS 2 - ch c!
     10 swap COLS 1-  ch c!
-    update ;
+    TRUE dirty ! ;
     
-: copy-row ( dst-y src-y -- )
-    COLS 0 do
-        2dup i ch c@ swap i ch c!
-    loop
-    2drop ;
+: copy-row ( dst-y src-y -- ) COLS 0 do 2dup i ch c@ swap i ch c! loop 2drop ;
     
 \ editor command: delete row
 : d ( y -- )
@@ -77,16 +57,11 @@ variable:  offs
 \ editor command: overwrite row
 : r: ( y "line" -- )
     dup b row
-    begin
-        key dup crlf? invert
-    while
-        over c! 1+
-    repeat
+    begin key dup crlf? invert while over c! 1+ repeat
     2drop ;
 
 \ editor command: prepends empty row before the given y
-: p ( y -- )
-    dup ROWS 1- do
-        i i 1- copy-row
-    -1 +loop
-    b ;
+: p ( y -- ) dup ROWS 1- do i i 1- copy-row -1 +loop b ;
+
+/end
+

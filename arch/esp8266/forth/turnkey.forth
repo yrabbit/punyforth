@@ -25,3 +25,6 @@ defer: boot
     loop
     heap-size heap-start dst write-flash check
     save-loader ;
+
+/end
+

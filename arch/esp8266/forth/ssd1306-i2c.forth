@@ -1,3 +1,5 @@
+GPIO load
+
 \ ssd1306 I2C display driver for OLED displays  
 \ Tested with 64x48 wemos oled shield and 128x32 integrated display of wifi kit 8
 \ Usage:
@@ -176,3 +178,6 @@ create: buf 16r80 c, 0 c,
     drop ;
     
 : str-width ( str -- ) strlen 8 * font-size @ * ;
+
+/end
+

@@ -1,3 +1,5 @@
+NETCON load
+
 \ Network Time Protocol implementation, originally based on the work of Craig A. Lindley
 \ Usage example:
 \    123 "time.nist.gov" network-time
@@ -32,3 +34,6 @@ SIZE byte-array: packet
     2208988800 - ;
   
 : network-time ( port host -- seconds-since-1970 | throws:ENTP ) ask SIZE = if parse else ENTP throw then ;
+
+/end
+

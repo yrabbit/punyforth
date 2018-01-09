@@ -1,3 +1,5 @@
+RINGBUF load
+
 : mailbox: ( size ) ( -- mailbox ) ringbuf: ;
 
 : mailbox-send ( message mailbox -- )
@@ -15,3 +17,6 @@
         pause
     repeat
     ringbuf-dequeue ;
+
+/end
+

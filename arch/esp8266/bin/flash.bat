@@ -1,1 +1,0 @@
-esptool.py -p %1 write_flash -fs 32m -fm qio -ff 40m 0x00000 rboot.bin 0x1000 blank_config.bin 0x2000 punyforth.bin 0x51000 uber.forth

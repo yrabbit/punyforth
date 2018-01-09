@@ -1,3 +1,6 @@
+NETCON load
+GPIO   load
+
 2 constant: LED    
 512 constant: buffer-size
 buffer-size buffer: line-buffer

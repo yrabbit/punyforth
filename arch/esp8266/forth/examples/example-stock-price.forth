@@ -1,3 +1,8 @@
+NETCON     load
+SSD1306SPI load
+FONT57     load
+WIFI       load
+
 \ stock price display with servo control
 \ see it in action: https://youtu.be/4ad7dZmnoH8
 

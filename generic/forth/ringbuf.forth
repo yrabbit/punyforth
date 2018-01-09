@@ -68,3 +68,6 @@ constant: RingBuf
     front-slot @
     swap
     removed ;
+
+/end
+

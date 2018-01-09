@@ -1,3 +1,5 @@
+GPIO load
+
 : emit-pulse ( trigger-pin -- )
     dup GPIO_OUT gpio-mode
     dup GPIO_LOW gpio-write
@@ -27,3 +29,5 @@
 : inch>timeout ( inch -- us ) 150 * ;
 : pulse>cm ( us -- cm ) 58 / ;
 : pulse>inch ( us -- inch ) 148 / ;
+
+/end

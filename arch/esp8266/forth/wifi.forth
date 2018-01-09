@@ -50,3 +50,6 @@ exception: EWIFI
 \ station ip    
 : wifi-ip ( -- str ) 0 ip ;
 : softap-ip ( -- str ) 1 ip ;
+
+/end
+

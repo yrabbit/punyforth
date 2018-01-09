@@ -33,4 +33,6 @@ exception: ENOPULSE
 \ Measures a pulse duration (either HIGH or LOW) on a pin.
 : pulse-len ( timeout-us gpio-state gpio-pin -- us | throws:ENOPULSE )
     pulse-in ?dup 0= if ENOPULSE throw then ;
-    
+
+/end
+

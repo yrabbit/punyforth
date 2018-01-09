@@ -1,3 +1,5 @@
+GPIO load
+
 40 byte-array: bits
 5  byte-array: bytes
 2  init-variable: var-dht-pin \ default D4, wemos d1 mini dht22 shield, use dht-pin! to override
@@ -73,3 +75,5 @@ exception: ECHECKSUM
     validate
     temperature humidity ;
     
+/end
+

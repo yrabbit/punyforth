@@ -1,3 +1,5 @@
+GPIO load
+
 \ module for sonoff smart socket
 
 12 constant: RELAY
@@ -27,3 +29,6 @@ LED GPIO_OUT gpio-mode
 
 : flash ( n -- ) LED swap times-blink led-off ;
 : alert ( -- ) 10 flash ; 
+
+/end
+

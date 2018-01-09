@@ -1,3 +1,7 @@
+NETCON load
+EVENT  load
+GPIO   load
+
 \ Detects motion using a PIR sensor and notifies a server via TCP
 \ I tested this with these mini IR PIR sensors 
 \ http://www.banggood.com/3Pcs-Mini-IR-Infrared-Pyroelectric-PIR-Body-Motion-Human-Sensor-Detector-Module-p-1020422.html

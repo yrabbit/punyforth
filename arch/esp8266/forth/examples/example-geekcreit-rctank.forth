@@ -1,3 +1,10 @@
+GPIO    load
+EVENT   load
+NETCON  load
+WIFI    load
+TCPREPL load
+PING    load
+
 \ this demo is for http://bit.ly/2bqHz58
 
 5  constant: PIN_SPEED_1 \ D1
