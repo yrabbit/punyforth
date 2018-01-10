@@ -512,6 +512,17 @@ defword "show_prompt",11,show_prompt,REGULAR
     .int xt_prompt, xt_fetch, xt_execute
     .int xt_end_word
 
+.ifndef xt_end_load
+defword "/end",4,end_load,REGULAR // dummy, used by esp port
+    .int xt_end_word
+.endif
+
+.ifndef xt_loading
+defword "loading?",8,loading,REGULAR // dummy, used by esp port
+    .int xt_btick, 0
+    .int xt_end_word
+.endif
+
 defword "key",3,key,REGULAR
     .int xt_tib, xt_inputlen, xt_fetch, xt_plus
     .int xt_toin, xt_fetch, xt_swap, xt_gte   

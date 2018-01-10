@@ -29,7 +29,7 @@ defprimitive "readchar-nowait",15,readchar_nowait,REGULAR /* ( -- char | -1 ) */
     NEXT
 
 defprimitive "load",4,load,REGULAR
-    DPOP a2			// source code address on flash
+    DPOP a2			// block number
     CCALL forth_load
     NEXT
 

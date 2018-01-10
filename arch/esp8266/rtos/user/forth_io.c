@@ -4,7 +4,7 @@
 #include "task.h"
 #include "forth_io.h"
 
-#define BUFFER_SIZE 1024 // should be multiple of 4
+#define BUFFER_SIZE 4096 // should be multiple of 4
 bool loading = false;
 char *buffer = NULL;
 int buffer_offset;
@@ -28,13 +28,16 @@ int pop() {
     return stack[--sp];
 }
 
-void forth_load(uint32_t address) {
-    //printf("Loading 16r%x\n", address);
+void load(uint32_t addr) {
     if (buffer == NULL) buffer = malloc(BUFFER_SIZE);
     buffer_offset = -1;
     if (loading) push(source_address);
-    source_address = address;
+    source_address = addr;
     loading = true;
+}
+
+void forth_load(uint32_t block_num) {
+    load(block_num * 4096);
 }
 
 bool forth_loading() {
@@ -44,7 +47,7 @@ bool forth_loading() {
 void forth_end_load() {
     if (!empty()) {
         loading = false;
-        forth_load(pop());
+        load(pop());
     } else {
         loading = false;
         free(buffer);
