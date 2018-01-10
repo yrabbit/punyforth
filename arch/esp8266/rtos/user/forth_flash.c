@@ -14,10 +14,10 @@ int forth_flash_erase_sector(int sector) {
     return map_err(sdk_spi_flash_erase_sector((uint16_t)sector));
 }
 
-int forth_flash_write(int sector, void* buffer, int size) {
-    return map_err(sdk_spi_flash_write((uint32_t)sector, buffer, (uint32_t)size));
+int forth_flash_write(int address, void* buffer, int size) {
+    return map_err(sdk_spi_flash_write((uint32_t)address, buffer, (uint32_t)size));
 }
 
-int forth_flash_read(int sector, void* buffer, int size) {
-    return map_err(sdk_spi_flash_read((uint32_t)sector, buffer, (uint32_t) size));
+int forth_flash_read(int address, void* buffer, int size) {
+    return map_err(sdk_spi_flash_read((uint32_t)address, buffer, (uint32_t) size));
 }

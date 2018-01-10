@@ -390,7 +390,7 @@ defprimitive "erase-flash",11,erase_flash,REGULAR
     NEXT
 
 defprimitive "read-flash",10,read_flash,REGULAR
-    DPOP a2                    // sector
+    DPOP a2                    // address
     DPOP a3                    // buffer
     DPOP a4                    // size
     CCALL forth_flash_read
@@ -398,7 +398,7 @@ defprimitive "read-flash",10,read_flash,REGULAR
     NEXT
 
 defprimitive "write-flash",11,write_flash,REGULAR
-    DPOP a2                    // sector
+    DPOP a2                    // address
     DPOP a3                    // buffer
     DPOP a4                    // size
     CCALL forth_flash_write
