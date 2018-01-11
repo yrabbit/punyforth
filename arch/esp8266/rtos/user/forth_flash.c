@@ -19,5 +19,5 @@ int forth_flash_write(int address, void* buffer, int size) {
 }
 
 int forth_flash_read(int address, void* buffer, int size) {
-    return map_err(sdk_spi_flash_read((uint32_t)address, buffer, (uint32_t) size));
+    return map_err(sdk_spi_flash_read((uint32_t)address, buffer, (uint32_t)size));
 }

@@ -1,8 +1,13 @@
 #include "FreeRTOS.h"
 #include "espressif/esp_common.h"
+#include "espressif/sdk_private.h"
 #include "esp/uart.h"
 #include "task.h"
 #include "forth_io.h"
+
+void forth_putchar(char c) { printf("%c", c); fflush(stdout); }
+void forth_type(char* text) { printf("%s", text); fflush(stdout); }
+void forth_uart_set_baud(int uart_num, int bps) { uart_set_baud(uart_num, bps); }
 
 #define BUFFER_SIZE 4096 // should be multiple of 4
 bool loading = false;
@@ -59,7 +64,7 @@ void forth_end_load() {
 int next_char_from_flash() { // read source stored code from flash memory
     if (buffer_offset < 0 || buffer_offset >= BUFFER_SIZE) {
         //printf("Reading 16r%x\n", source_address);
-        printf(".");
+        forth_putchar('.');
         sdk_spi_flash_read(source_address, (void *) buffer, BUFFER_SIZE);
         buffer_offset = 0;
     }
@@ -88,8 +93,4 @@ int forth_getchar_nowait() {
    char buf[1];
    return sdk_uart_rx_one_char(buf) != 0 ? check_enter() : buf[0];
 }
-
-void forth_putchar(char c) { printf("%c", c); }
-void forth_type(char* text) { printf("%s", text); }
-void forth_uart_set_baud(int uart_num, int bps) { uart_set_baud(uart_num, bps); }
 

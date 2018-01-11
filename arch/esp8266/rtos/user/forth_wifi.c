@@ -1,4 +1,6 @@
 #include "espressif/esp_common.h"
+#include "espressif/esp_wifi.h"
+#include "esplibs/libnet80211.h"
 #include "FreeRTOS.h"
 #include "string.h"
 #include "dhcpserver.h"
@@ -6,7 +8,7 @@
 
 
 // workaround see github.com/SuperHouse/esp-open-rtos/issues/140
-void sdk_hostap_handle_timer(void *cnx_node) { } 
+// void sdk_hostap_handle_timer(void *cnx_node) { } 
 
 int forth_wifi_set_opmode(int mode) {
     return sdk_wifi_set_opmode(mode);
@@ -55,7 +57,7 @@ void forth_wifi_set_ip(int ipv4) {
 void forth_wifi_get_ip_str(int interface, char * buffer, int size) {
     struct ip_info wifi_info;
     sdk_wifi_get_ip_info(interface, &wifi_info);
-    struct ip_addr ip = wifi_info.ip; 
+    struct ip4_addr ip = wifi_info.ip; 
     snprintf(buffer, size, IPSTR, IP2STR(&ip));
 }
 
