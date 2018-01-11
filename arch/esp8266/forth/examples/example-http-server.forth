@@ -75,5 +75,3 @@ Connection: close\r\n
 
 start-http-server
 
-/end
-

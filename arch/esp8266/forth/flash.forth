@@ -5,21 +5,16 @@ SIZE       buffer:        buf
 variable:  offs
 
 : check ( code -- | 0=OK,1=ERR,2=TIMEOUT,3=UNKNOWN ) ?dup if print: 'FLASH ERR: ' . cr EBLOCK throw then ; 
-: >sector ( block# -- sector# ) 12 rshift ( SIZE / ) ;
-    
 : flush ( -- )
     dirty @ if
-        offs @ >sector erase-flash  check
+        offs @ 12 rshift ( >sector ) erase-flash check
         SIZE buf offs @ write-flash check
         FALSE dirty !
     then ;
     
 : block ( block# -- addr )
-    flush
-    12 lshift ( SIZE * ) offs !
-    SIZE buf offs @ read-flash check
-    FALSE dirty !
-    buf ;
+    flush 12 lshift ( SIZE * ) offs !
+    SIZE buf offs @ read-flash check buf ;
     
 ( screen editor requires to flash with --block-format yes )
 
