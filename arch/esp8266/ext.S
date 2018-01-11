@@ -541,46 +541,57 @@ defprimitive "r@",2,rfetch,REGULAR
     NEXT
 
 defprimitive "i2c-start",9,i2c_start,REGULAR
-    CCALL i2c_start
+    DPOP a2                 // bus
+    CCALL forth_i2c_start
     NEXT
 
 defprimitive "i2c-stop",8,i2c_stop,REGULAR
-    CCALL i2c_stop
+    DPOP a2                 // bus
+    CCALL forth_i2c_stop
+    DPUSH a2                // cbool
     NEXT
 
 defprimitive "i2c-init",8,i2c_init,REGULAR
-    DPOP a2                    // scl_pin
-    DPOP a3                    // sda_pin
-    CCALL i2c_init
+    DPOP a2                    // bus
+    DPOP a3                    // scl_pin
+    DPOP a4                    // sda_pin
+    DPOP a5                    // freq
+    CCALL forth_i2c_init
+    DPUSH a2                   // int result
     NEXT
 
 defprimitive "i2c-read",8,i2c_read,REGULAR
-    DPOP a2                    // ack
-    CCALL i2c_read
+    DPOP a2                    // bus
+    DPOP a3                    // ack
+    CCALL forth_i2c_read
     DPUSH a2                   // data
     NEXT
 
 defprimitive "i2c-write",9,i2c_write,REGULAR
-    DPOP a2                    // byte
-    CCALL i2c_write
-    DPUSH a2                   // bool
+    DPOP a2                    // bus
+    DPOP a3                    // byte
+    CCALL forth_i2c_write
+    DPUSH a2                   // cbool
     NEXT
 
 defprimitive "i2c-read-slave",14,i2c_read_slave,REGULAR
-    DPOP a2                    // slave_addr
-    DPOP a3                    // data
-    DPOP a4                    // buffer
-    DPOP a5                    // len
-    CCALL i2c_slave_read
-    DPUSH a2                   // bool
+    DPOP a2                    // bus
+    DPOP a3                    // slave_addr
+    DPOP a4                    // data
+    DPOP a5                    // buffer
+    DPOP a6                    // len
+    CCALL forth_i2c_slave_read
+    DPUSH a2                   // int result
     NEXT
 
 defprimitive "i2c-write-slave",15,i2c_write_slave,REGULAR
-    DPOP a2                    // slave_addr
-    DPOP a3                    // buf
-    DPOP a4                    // len
-    CCALL i2c_slave_write
-    DPUSH a2                   // bool
+    DPOP a2                    // bus
+    DPOP a3                    // slave_addr
+    DPOP a4                    // data
+    DPOP a5                    // buffer
+    DPOP a6                    // len
+    CCALL forth_i2c_slave_write
+    DPUSH a2                   // int result
     NEXT
 
 defprimitive "cpufreq!",8,setcpufreq,REGULAR
