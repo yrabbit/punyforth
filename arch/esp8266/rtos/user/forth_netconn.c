@@ -165,15 +165,16 @@ struct recvinto_res forth_netcon_recvinto(struct forth_netconn* conn, void* buff
         conn->bufpos = 0;
     }
     int count = netbuf_copy_partial(conn->nbuf, buffer, size, conn->bufpos);
-    if (count > 0) {
-        conn->bufpos += count;
-        struct recvinto_res result = { .code = ERR_OK, .count = count };
-        return result;
+    conn->bufpos += count;
+
+    struct recvinto_res result = { .code = ERR_OK, .count = count };
+
+    if (conn->bufpos >= netbuf_len(conn->nbuf)) {
+      netbuf_delete(conn->nbuf);
+      conn->nbuf = NULL;
+      conn->bufpos = 0;
     }
-    netbuf_delete(conn->nbuf);
-    conn->nbuf = NULL;
-    conn->bufpos = 0;
-    struct recvinto_res result = { .code = ERR_OK, .count = 0 };
+
     return result; 
 }
 
