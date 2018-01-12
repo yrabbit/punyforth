@@ -154,7 +154,6 @@ struct recvinto_res {
 };
 
 struct recvinto_res forth_netcon_recvinto(struct forth_netconn* conn, void* buffer, int size) {
-    // printf("receiving buffer %p max size: %d. cache len=%d cache start=%d cache end=%d\n", buffer, size, cache_data_len(conn), conn->cache_start, conn->cache_end);
     if (conn->nbuf == NULL) {
         struct netbuf *inbuf;
         err_t err;
@@ -165,18 +164,17 @@ struct recvinto_res forth_netcon_recvinto(struct forth_netconn* conn, void* buff
         conn->nbuf = inbuf;
         conn->bufpos = 0;
     }
-
     int count = netbuf_copy_partial(conn->nbuf, buffer, size, conn->bufpos);
-    conn->bufpos += count;
-    if (count != 0) {
+    if (count > 0) {
+        conn->bufpos += count;
         struct recvinto_res result = { .code = ERR_OK, .count = count };
         return result;
     }
-
     netbuf_delete(conn->nbuf);
     conn->nbuf = NULL;
     conn->bufpos = 0;
-    return forth_netcon_recvinto(conn, buffer, size);
+    struct recvinto_res result = { .code = ERR_OK, .count = 0 };
+    return result; 
 }
 
 struct accept_res {
