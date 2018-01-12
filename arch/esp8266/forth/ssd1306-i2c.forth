@@ -18,6 +18,8 @@ GPIO load
 4 ( D2 SDA ) constant: SDA
 0 ( D3 RST ) constant: RST 
 16r3C        constant: SLAVE
+0            constant: BUS
+2 ( 400K )   constant: FREQ
 
 WIDTH HEIGHT * 8 / constant: SIZE
 SIZE 1+ buffer: screen1
@@ -26,28 +28,15 @@ SIZE 1+ buffer: screen1
 
 exception: EI2C
 
-\ i2c-write-slave in rtos uses uint8_t len parameter
-\ this version uses 32bit integer
-\ TODO: use updated version of RTOS and delete this word
-: i2c-write-slave ( len buffer slave-addr -- cbool )
-    i2c-start
-    1 lshift i2c-write 1 <> if 2drop i2c-stop 0 exit then
-    swap 0 do
-        dup i + c@ i2c-write 1 <> if
-            unloop drop i2c-stop 0 exit
-        then
-    loop
-    drop i2c-stop 1 ;
-
 : wire ( -- )
     SCL GPIO_OUT gpio-mode
     SDA GPIO_OUT gpio-mode    
     RST GPIO_LOW gpio-write ;
 
-: check ( code -- | throws:EI2C ) 1 <> if EI2C throw then ;
+: check ( code -- | throws:EI2C ) 0<> if EI2C throw then ;
 
 create: buf 16r80 c, 0 c,
-: cmd ( byte -- | throws:EI2C ) buf 1+ c! 2 buf SLAVE i2c-write-slave check ;
+: cmd ( byte -- | throws:EI2C ) buf 1+ c! 2 buf 0 ( data ) SLAVE BUS i2c-write-slave check ;
 
 : reset ( -- )
     RST GPIO_HIGH gpio-write 1 ms
@@ -125,10 +114,11 @@ create: buf 16r80 c, 0 c,
     16r22 ( PAGEADD )              cmd 
     0                              cmd 
     [ HEIGHT 3 rshift 1- ] literal cmd
-    SIZE 1+ screen 1- SLAVE i2c-write-slave check ;
+    SIZE 1+ screen 1- 0 ( data ) SLAVE BUS i2c-write-slave check ;
 
 : display-clear ( -- ) 0 fill-buffer display ;
-: display-init ( -- | throws:ESSD1306 ) wire SDA SCL i2c-init reset init display-clear ;  
+: bus-init ( -- ) FREQ SDA SCL BUS i2c-init check ;
+: display-init ( -- | throws:ESSD1306 ) wire bus-init reset init display-clear ;  
 
 \ TODO move these to common place as they're used in the spi driver too
 0 init-variable: font
