@@ -1,5 +1,3 @@
-PUNIT load
-
 marker: -tests
 
 exception: EFAC
