@@ -1,73 +1,102 @@
 import sys, os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
+START_ADDRESS   = 0x52000
+LAYOUT_ADDRESS  = 0x51000
+SECTOR_SIZE = 4096
+MAX_LINE_LEN = max_line_len=128 - len(os.linesep)
+
 class BlockNumber:
     @staticmethod
-    def from_address(addr): return BlockNumber(addr / 4096)
+    def from_address(addr): return BlockNumber(addr / SECTOR_SIZE)
     def __init__(self, num): self.num = num
     def __str__(self): return str(self.num)
 
 class App:
-    def __init__(self, path, load_addresses):
-        self.path = path
-        self.load_addresses = load_addresses
+    TEMPLATE = """%s load
+%s load
+%s
+stack-show
+/end\n"""
 
-    def prepared(self):
+    def __init__(self, path, address, layout_address, code_format):
+        self.path = path
+        self.address = address
+        self.layout_address = layout_address
+        self.code_format = code_format
+
+    def _generate(self, core_block_num):
         name = 'main.tmp'
-        with open(name, "wt") as f:
-            for each in self.load_addresses: f.write("%s load\n" % BlockNumber.from_address(each))
-            f.write(self.read())
-            f.write("stack-show\n")
-            f.write("/end\n")
+        with open(name, "wt") as f: f.write(self._content(core_block_num))
         return name
 
-    def read(self):
+    def _content(self, core_block_num):
+        return App.TEMPLATE % (core_block_num, BlockNumber.from_address(self.layout_address), self._read())
+
+    def code(self):
+        code = Code(self._generate('dummy'.ljust(8)), 'APP', self.code_format)
+        core_block_num = BlockNumber.from_address(self.address + code.flash_usage()) # XXX Assumption: after me there is the core module
+        return Code(self._generate(str(core_block_num).ljust(8)), 'APP', self.code_format) # save it again with the correct address
+
+    def _read(self):
         if not self.path: return ''
         with open(self.path, "rt") as app: return app.read()
 
-class ModuleAddress:
-    def __init__(self, start, increment):
-        self.start = start
-        self.current = start
-        self.increment = increment
+    def _save(self, output_file, content):
+        with open(output_file, 'wt') as f: f.write(content)
+        return output_file
 
-    def next(self):
-        actual = self.current
-        self.current += self.increment
-        return actual
+class CodeFormat:
+    @staticmethod
+    def create(block_format):
+        return ScreenAlignedFormat(MAX_LINE_LEN) if block_format else OriginalFormat()
 
-    def reset(self): self.current = self.start
+    def transform(self, content): raise RuntimeError('Subclass responsibility')
 
-class Code:
-    def __init__(self, path, name):
-        self.path = path
-        self.name = name
-        self.content = self.load(path)
+class ScreenAlignedFormat(CodeFormat):
+    def __init__(self, max_line_len):
+        self.max_line_len = max_line_len
 
-    def load(self, path):
-        with open(path) as f: return f.read()
-
-    def validate(self, max_size, max_line_len):
-        if len(self.content) > max_size:
-            raise RuntimeError('File is too large (%d), won''t fit in flash. Max size is %d' % (len(self.content), max_size))
-        if any(len(line) > max_line_len for line in self.content.split('\n')):
-            raise RuntimeError('Input overflow at line: "%s"' % [line for line in self.content.split('\n') if len(line) >= max_line_len][0])
-
-    def to_block_format(self, max_line_len, output_file):
-        self.save(self.pad(max_line_len), output_file)
-
-    def pad(self, max_line_len):
+    def transform(self, content):
         """ This is for the block screen editor. A screen = 128 columns and 32 rows """
         def pad_line(line):
-            return line + (' ' * (max_line_len - len(line)))
-        return '\n'.join([pad_line(line) for line in self.content.split('\n')])
+            return line + (' ' * (self.max_line_len - len(line)))
+        return '\n'.join([pad_line(line) for line in content.split('\n')])
 
-    def save(self, content, output_file):
-        with open(output_file, 'wt') as f: f.write(content)
+class OriginalFormat(CodeFormat):
+    def transform(self, content): return content
+
+class Code:
+    def __init__(self, path, name, code_format):
+        self.name = name
+        self.content = code_format.transform(self._load(path))
+
+    def _load(self, path):
+        with open(path) as f: return f.read()
+
+    def validate(self, max_line_len):
+        if any(len(line) > max_line_len for line in self.content.split('\n')):
+            raise RuntimeError('Input overflow at line: "%s"' % [line for line in self.content.split('\n') if len(line) >= max_line_len][0])
+    
+    def flash_usage(self):
+        return (len(self.content) / SECTOR_SIZE + 1) * SECTOR_SIZE
+
+    def flashable(self, address):
+        return Flashable(self.name, address, self._save("%s.tmp" % self.name))
+
+    def _save(self, output_file):
+        with open(output_file, 'wt') as f: f.write(self.content)
+        return output_file
+
+class Flashable:
+    def __init__(self, name, address, path):
+        self.name = name
+        self.address = address
+        self.path = path
 
 class Modules:
     class All:
-        def __call__(self, code): return True
+        def __call__(self, code): return code.name.lower() != 'test'
         def __str__(self): return 'ALL'
 
     class Nothing:
@@ -83,16 +112,15 @@ class Modules:
         def __call__(self, code): return code.name.lower() in self.names
         def __str__(self): return 'Only: %s' % self.names
 
-    def __init__(self, start_address, layout_address, max_size, max_line_len):
-        self.max_size = max_size
-        self.address = ModuleAddress(start_address, max_size)
+    def __init__(self, start_address, layout_address, max_line_len):
+        self.start_address = start_address
         self.layout_address = layout_address
         self.max_line_len = max_line_len
         self.modules = []
         self.module_filter = Modules.All()
 
     def add(self, code):
-        code.validate(self.max_size, self.max_line_len)
+        code.validate(self.max_line_len)
         self.modules.append(code)
         return self
 
@@ -108,44 +136,37 @@ class Modules:
         self.flash_modules(esp, block_format)
 
     def flash_layout(self, esp, block_format):
-        layout = Layout.generate(self.to_be_flashed())
+        layout = Layout.generate(self.to_be_flashed(), block_format)
         if self.module_filter(layout):
-            self.transform_and_save(layout, self.layout_address, esp, block_format)
+            flashable = layout.flashable(self.layout_address)
+            self.save_to_esp(self.layout_address, flashable.path, esp)
 
     def flash_modules(self, esp, block_format):
-        for address, code in self.to_be_flashed():
-            self.transform_and_save(code, address, esp, block_format)
+        for each in self.to_be_flashed():
+            self.save_to_esp(each.address, each.path, esp)
 
     def to_be_flashed(self):
         result = []
-        self.address.reset()
+        address = self.start_address
         for code in self.selected():
-            result.append((self.address.next(), code))
+            result.append(code.flashable(address))
+            address += code.flash_usage()
         return result
 
-    def transform_and_save(self, code, address, esp, block_format):
-        print "Flashing %s" % code.name
-        if block_format:
-            code.to_block_format(self.max_line_len, 'block.tmp')
-            self.save_to_esp(address, 'block.tmp', esp, self.max_size)
-        else:
-            self.save_to_esp(address, code.path, esp, self.max_size)
-
-    def save_to_esp(self, address, path, esp, max_size):
-        if os.path.getsize(path) > max_size:
-            raise RuntimeError('File is too large %s' % path)
+    def save_to_esp(self, address, path, esp):
+        print 'Flashing %s' % os.path.basename(path)
         esp.write_flash(address, path)
     
 class Layout:
     @staticmethod
-    def generate(flashed_modules):
+    def generate(flashables, block_format):
         layout = 'layout.tmp'
         with open(layout, 'wt') as f:
-            for address, code in flashed_modules:
-                if code.name not in ['APP', 'CORE']:
-                    f.write('%s constant: %s\n' % (BlockNumber.from_address(address), code.name))
+            for each in flashables:
+                if each.name not in ['APP', 'CORE']:
+                    f.write('%s constant: %s\n' % (BlockNumber.from_address(each.address), each.name))
             f.write('/end\n')
-        return Code(layout, 'LAYOUT')
+        return Code(layout, 'LAYOUT', CodeFormat.create(block_format))
 
 class Binaries:
     def __init__(self):
@@ -159,14 +180,15 @@ class Binaries:
         esp.write_flash_many(self.binaries)
     
 class Esp:
-    def __init__(self, port):
+    def __init__(self, port, flashmode):
         self.port = port
+        self.flashmode = flashmode
 
     def write_flash(self, address, path):
-        os.system("python esptool.py -p %s write_flash 0x%x %s" % (self.port, address, path))
+        os.system("python esptool.py -p %s write_flash -fm %s -ff 40m 0x%x %s" % (self.port, self.flashmode, address, path))
 
     def write_flash_many(self, tupl):
-        os.system("python esptool.py -p %s write_flash -fs 32m -fm dio -ff 40m %s" % (self.port, ' '.join("0x%x %s" % each for each in tupl)))
+        os.system("python esptool.py -p %s write_flash -fs 32m -fm %s -ff 40m %s" % (self.port, self.flashmode, ' '.join("0x%x %s" % each for each in tupl)))
 
 class CommandLine:
     @staticmethod
@@ -181,6 +203,7 @@ class CommandLine:
         self.parser.add_argument('--modules', nargs='*', default=['all'], help='List of modules. Default is "all".')
         self.parser.add_argument('--binary', default=True, type=CommandLine.to_bool, help='Use "no" to skip flashing binaries. Default is "yes".')
         self.parser.add_argument('--main', default='', help='Path of the Forth code that will be used as an entry point.')
+        self.parser.add_argument('--flashmode', default='qio', help='Valid values are: qio, qout, dio, dout')
         self.parser.add_argument('--block-format', default=False, type=CommandLine.to_bool, help='Use "yes" to format source code into block format (128 columns and 32 rows padded with spaces). Default is "no".')
 
     def examples(self):
@@ -196,11 +219,12 @@ Flash all modules, binaries and use myapp.forth as an entry point:
     $ python flash.py /dev/cu.wchusbserial1410 --main myapp.forth
 
 Available modules:\n%s
-        """ % '\n'.join("\t* %s" % each.name for each in AVAILABLE_MODULES)
+        """ % '\n'.join("\t* %s" % each[1] for each in AVAILABLE_MODULES)
     
     def parse(self):
         args = self.parser.parse_args()
         args.modules = self.modules(args)
+        args.code_format = CodeFormat.create(args.block_format)
         return args
 
     def modules(self, args):
@@ -208,34 +232,31 @@ Available modules:\n%s
         if args.modules == ['none']: return Modules.Nothing()
         return Modules.Only(args.modules)
 
-START_ADDRESS   = 0x52000
-LAYOUT_ADDRESS  = 0x51000
-MAX_MODULE_SIZE = 49152
-
 # TODO:
 # Protection against loading multiple transitive modules
-# Fix flash edit
 
 AVAILABLE_MODULES = [
-    Code("../../../generic/forth/core.forth", 'CORE'),
-    Code("../forth/dht22.forth", 'DHT22'),
-    Code("../forth/flash.forth", 'FLASH'),
-    Code("../forth/font5x7.forth", 'FONT57'),
-    Code("../forth/gpio.forth", 'GPIO'),
-    Code("../forth/mailbox.forth", 'MAILBOX'),
-    Code("../forth/netcon.forth", 'NETCON'),
-    Code("../forth/ntp.forth", 'NTP'),
-    Code("../forth/ping.forth", 'PING'),
-    Code("../forth/sonoff.forth", 'SONOFF'),
-    Code("../forth/ssd1306-i2c.forth", 'SSD1306I2C'),
-    Code("../forth/ssd1306-spi.forth", 'SSD1306SPI'),
-    Code("../forth/tasks.forth", 'TASKS'),
-    Code("../forth/tcp-repl.forth", 'TCPREPL'),
-    Code("../forth/turnkey.forth", 'TURNKEY'),
-    Code("../forth/wifi.forth", 'WIFI'),
-    Code("../forth/event.forth", 'EVENT'),
-    Code("../../../generic/forth/ringbuf.forth", 'RINGBUF'),
-    Code("../../../generic/forth/decompiler.forth", 'DECOMP')
+    ('../../../generic/forth/core.forth', 'CORE'),
+    ('../forth/dht22.forth', 'DHT22'),
+    ('../forth/flash.forth', 'FLASH'),
+    ('../forth/font5x7.forth', 'FONT57'),
+    ('../forth/gpio.forth', 'GPIO'),
+    ('../forth/mailbox.forth', 'MAILBOX'),
+    ('../forth/netcon.forth', 'NETCON'),
+    ('../forth/ntp.forth', 'NTP'),
+    ('../forth/ping.forth', 'PING'),
+    ('../forth/sonoff.forth', 'SONOFF'),
+    ('../forth/ssd1306-i2c.forth', 'SSD1306I2C'),
+    ('../forth/ssd1306-spi.forth', 'SSD1306SPI'),
+    ('../forth/tasks.forth', 'TASKS'),
+    ('../forth/tcp-repl.forth', 'TCPREPL'),
+    ('../forth/turnkey.forth', 'TURNKEY'),
+    ('../forth/wifi.forth', 'WIFI'),
+    ('../forth/event.forth', 'EVENT'),
+    ('../../../generic/forth/ringbuf.forth', 'RINGBUF'),
+    ('../../../generic/forth/decompiler.forth', 'DECOMP'),
+    ('../../../generic/forth/punit.forth', 'PUNIT'),
+    ('../../../generic/forth/test.forth', 'TEST')
 ]
 
 def tmpfiles(): return (each for each in os.listdir('.') if each.endswith('.tmp'))
@@ -244,11 +265,11 @@ def remove(files):
 
 if __name__ == '__main__':
     args = CommandLine().parse()
-    esp = Esp(args.port)
-    app = App(path=args.main, load_addresses=[START_ADDRESS + MAX_MODULE_SIZE, LAYOUT_ADDRESS])
-    modules = Modules(START_ADDRESS, LAYOUT_ADDRESS, MAX_MODULE_SIZE, max_line_len=128 - len(os.linesep))
-    modules.add(Code(app.prepared(), 'APP'))
-    for each in AVAILABLE_MODULES: modules.add(each)
+    esp = Esp(args.port, args.flashmode)
+    app = App(args.main, START_ADDRESS, LAYOUT_ADDRESS, args.code_format)
+    modules = Modules(START_ADDRESS, LAYOUT_ADDRESS, max_line_len=MAX_LINE_LEN)
+    modules.add(app.code())
+    for path, name in AVAILABLE_MODULES: modules.add(Code(path, name, args.code_format))
     modules.select(args.modules)
     if args.binary: Binaries().flash(esp)
     modules.flash(esp, args.block_format)

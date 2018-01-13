@@ -1,3 +1,5 @@
+PUNIT load
+
 marker: -tests
 
 exception: EFAC
@@ -403,3 +405,6 @@ test
 depth 0= assert
 
 -tests
+
+/end
+
