@@ -139,11 +139,10 @@ class Modules:
         layout = Layout.generate(self.to_be_flashed(), block_format)
         if self.module_filter(layout):
             flashable = layout.flashable(self.layout_address)
-            self.save_to_esp(self.layout_address, flashable.path, esp)
+            esp.write_flash(self.layout_address, flashable.path)
 
     def flash_modules(self, esp, block_format):
-        for each in self.to_be_flashed():
-            self.save_to_esp(each.address, each.path, esp)
+        esp.write_flash_many([(each.address, each.path) for each in self.to_be_flashed()])
 
     def to_be_flashed(self):
         result = []
@@ -152,10 +151,6 @@ class Modules:
             result.append(code.flashable(address))
             address += code.flash_usage()
         return result
-
-    def save_to_esp(self, address, path, esp):
-        print 'Flashing %s' % os.path.basename(path)
-        esp.write_flash(address, path)
     
 class Layout:
     @staticmethod
@@ -185,9 +180,12 @@ class Esp:
         self.flashmode = flashmode
 
     def write_flash(self, address, path):
+        print 'Flashing %s' % os.path.basename(path)
         os.system("python esptool.py -p %s write_flash -fm %s -ff 40m 0x%x %s" % (self.port, self.flashmode, address, path))
 
     def write_flash_many(self, tupl):
+        if not tupl: return
+        print 'Flashing %s' % ', '.join('0x%x: %s' % (address, os.path.basename(path)) for (address, path) in tupl)
         os.system("python esptool.py -p %s write_flash -fs 32m -fm %s -ff 40m %s" % (self.port, self.flashmode, ' '.join("0x%x %s" % each for each in tupl)))
 
 class CommandLine:
