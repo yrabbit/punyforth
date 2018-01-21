@@ -56,44 +56,40 @@ constant: TZ
 : tz: TZ create: allot ;
 
 rule:  PST
- 1     PST .week    !
- 7     PST .dow     !
-11     PST .month   !
- 2     PST .hour    !
--480   PST .offset  !
-"PST"  PST .name    !
-
+ 1     PST .week     !
+ 7     PST .dow      !
+11     PST .month    !
+ 2     PST .hour     !
+-480   PST .offset   !
+"PST"  PST .name     !
 rule:  PDT
- 2     PDT .week    !
- 7     PDT .dow     !
- 3     PDT .month   !
- 2     PDT .hour    !
--420   PDT .offset  !
-"PDT"  PDT .name    !
+ 2     PDT .week     !
+ 7     PDT .dow      !
+ 3     PDT .month    !
+ 2     PDT .hour     !
+-420   PDT .offset   !
+"PDT"  PDT .name     !
+tz:    US3
+PST    US3 .standard !
+PDT    US3 .summer   !
 
-rule:  CET
- 0     CET .week    ! \ Last week
- 7     CET .dow     !
-10     CET .month   !
- 3     CET .hour    !
-60     CET .offset  !
-"CET"  CET .name    !
-
-rule:  CEST
- 0     CEST .week   ! \ Last week
- 7     CEST .dow    !
- 3     CEST .month  !
- 2     CEST .hour   !
-120    CEST .offset !
-"CEST" CEST .name   !
-
-tz:  US
-PST  US .standard !
-PDT  US .summer   !
-
-tz:  HU
-CET  HU .standard !
-CEST HU .summer   !
+rule:  EST
+ 1     EST .week     !
+ 7     EST .dow      !
+11     EST .month    !
+ 2     EST .hour     !
+-300   EST .offset   !
+"EST"  EST .name     !
+rule:  EDT
+ 2     EDT .week     !
+ 7     EDT .dow      !
+ 3     EDT .month    !
+ 2     EDT .hour     !
+-240   EDT .offset   !
+"EDT"  EDT .name     !
+tz:    US1
+EST    US1 .standard !
+EDT    US1 .summer   !
 
 : 1stday ( month -- 1..7 ) 1 swap time year >ts weekday ;
 : dday ( rule -- day )
@@ -101,19 +97,22 @@ CEST HU .summer   !
     over .month @ 1stday 2dup >= if - else 7 swap - + then 1+ 
     swap .week @ 1- 7 * + ;
 
-: shifting-time ( rule -- utc ) \ TODO LAST WEEK handling
+: shifting-time ( rule -- utc )
     dup  dday
     over .month @ time year >ts 
     over .offset @ -60 * +
     swap .hour   @ 3600 * + ;
 
-: summer-change   ( -- utc ) timezone @ .summer   @ shifting-time ;
-: standard-change ( -- utc ) timezone @ .standard @ shifting-time ;
-: current-zone ( -- rule ) \ TODO south hemisphere
-    time summer-change   < if timezone @ .standard @ exit then
-    time standard-change < if timezone @ .summer   @ exit then
-    timezone @ .standard @ ;
-
+: summer-start   ( -- utc ) timezone @ .summer   @ shifting-time ;
+: standard-start ( -- utc ) timezone @ .standard @ shifting-time ;
+: [a,b)? ( a n b -- bool ) over > -rot <= and ;
+: daylight-saving? ( -- bool )
+    standard-start summer-start > if
+        summer-start time standard-start [a,b)?
+    else
+        summer-start time standard-start [a,b)? invert
+    then ;
+: current-zone ( -- rule ) daylight-saving? if timezone @ .summer @ else timezone @ .standard @ then ;
 : apply-zone ( -- ) current-zone .offset @ offset ! ;
 
 : format
@@ -133,7 +132,7 @@ CEST HU .summer   !
 
 0 task: time-task
 : main
-    HU timezone !
+    US3 timezone !
     display-init font5x7 font !  
     sync multi time-task start ;
 
