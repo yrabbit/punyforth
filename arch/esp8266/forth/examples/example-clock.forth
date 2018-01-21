@@ -40,10 +40,10 @@ variable: timezone
 : >ts ( d m y -- ts ) days 86400 * ;
 
 struct
-    cell field: .week    \ last = 0 first second third fourth
-    cell field: .dow     \ 1..7 = mon..sun
-    cell field: .month   \ Jan = 1 .. Dec
-    cell field: .hour    \ 0 .. 23
+    cell field: .week    \ 1st..4th
+    cell field: .dow     \ 1..7 mon..sun
+    cell field: .month   \ 1..12
+    cell field: .hour    \ 0..23
     cell field: .offset  \ Offset from UTC in minutes
     cell field: .name
 constant: RULE
@@ -55,6 +55,7 @@ struct
 constant: TZ
 : tz: TZ create: allot ;
 
+( US West Coast )
 rule:  PST
  1     PST .week     !
  7     PST .dow      !
@@ -73,6 +74,7 @@ tz:    US3
 PST    US3 .standard !
 PDT    US3 .summer   !
 
+( US East Coast )
 rule:  EST
  1     EST .week     !
  7     EST .dow      !
