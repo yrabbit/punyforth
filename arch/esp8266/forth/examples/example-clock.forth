@@ -121,10 +121,11 @@ EDT    US1 .summer   !
     time hour 10 < if $0 hh c! 1 else 0 then ]hh time hour >str
     time mins 10 < if $0 mm c! 1 else 0 then ]mm time mins >str ;
 
-: centery HEIGHT 2 / 4 - text-top ! ;
+: centery HEIGHT 2 / 8 font-size @ * 2 / - text-top ! ;
 : colon tick @ if ":" else " " then draw-str tick @ invert tick ! ;
 : draw-time
     0 fill-buffer
+    font-medium
     0 text-left ! centery
     hh draw-str colon mm draw-str " " draw-str
     current-zone .name @ draw-str ;
