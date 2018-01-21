@@ -13,6 +13,8 @@ GPIO load
 \ change width/height
 64 constant: WIDTH
 48 constant: HEIGHT
+\ 128 constant: WIDTH
+\ 32 constant: HEIGHT
  
 5 ( D1 SCL ) constant: SCL
 4 ( D2 SDA ) constant: SDA
@@ -167,7 +169,7 @@ create: buf 16r80 c, 0 c,
     loop
     drop ;
     
-: str-width ( str -- ) strlen 8 * font-size @ * ;
+: str-width ( str -- ) strlen 6 * font-size @ * ;
 
 /end
 

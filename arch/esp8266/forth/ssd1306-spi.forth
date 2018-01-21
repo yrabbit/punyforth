@@ -226,7 +226,7 @@ screen1 init-variable: actual
     loop
     drop ;
     
-: str-width ( str -- ) strlen 8 * font-size @ * ;
+: str-width ( str -- ) strlen 6 * font-size @ * ;
 
 /end
 

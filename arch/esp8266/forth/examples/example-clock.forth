@@ -12,7 +12,7 @@ variable: timezone
 
 : age ( -- ms ) ms@ last-sync @ - ;
 : expired? ( -- bool ) age 60000 15 * > ;
-: stale? ( -- bool ) age 60000 60 * > ;
+: stale? ( -- bool ) age 60000 60 * > clock @ 0= or ;
 : fetch ( -- ts ) 123 "time.google.com" network-time ;
 : sync ( -- ) { fetch clock ! ms@ last-sync ! } catch ?dup if print: 'sync error:' ex-type cr then ;
 : time  ( -- ts )  clock @ offset @ 60 * + age 1000 / + ;
@@ -117,24 +117,27 @@ EDT    US1 .summer   !
 : current-zone ( -- rule ) daylight-saving? if timezone @ .summer @ else timezone @ .standard @ then ;
 : apply-zone ( -- ) current-zone .offset @ offset ! ;
 
-: format
+: format ( -- )
     time hour 10 < if $0 hh c! 1 else 0 then ]hh time hour >str
     time mins 10 < if $0 mm c! 1 else 0 then ]mm time mins >str ;
 
-: centery HEIGHT 2 / 8 font-size @ * 2 / - text-top ! ;
-: colon tick @ if ":" else " " then draw-str tick @ invert tick ! ;
-: draw-time
-    0 fill-buffer
-    font-medium
-    0 text-left ! centery
-    hh draw-str colon mm draw-str " " draw-str
+: center ( -- ) 
+    WIDTH  2 / "00:00 PDT" str-width 2 / - text-left !
+    HEIGHT 2 / 8 font-size @ * 2 / -       text-top  ! ;
+: colon ( -- ) tick @ if ":" else " " then draw-str tick @ invert tick ! ;
+: clean ( -- ) 0 fill-buffer ;
+: draw-time ( -- )
+    format
+    WIDTH 128 >= if font-medium else font-small then
+    center hh draw-str colon mm draw-str " " draw-str
     current-zone .name @ draw-str ;
 
-: draw format draw-time display ;
-: start ( task -- ) activate begin expired? if sync then apply-zone draw 1000 ms pause again ;
+: stale-warning ( -- ) font-small 0 text-top ! 0 text-left ! "Stale" draw-str ;
+: draw ( -- ) clean stale? if stale-warning else apply-zone draw-time then display ;
+: start ( task -- ) activate begin expired? if sync then draw 1000 ms pause again ;
 
 0 task: time-task
-: main
+: main ( -- )
     US3 timezone !
     display-init font5x7 font !  
     sync multi time-task start ;
