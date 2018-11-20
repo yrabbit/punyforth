@@ -9,14 +9,11 @@ GPIO load
 0  constant: RST  \ RST D3 leg
 1  constant: BUS
 
-0 constant: SPI_MODE0
 1 constant: SPI_WORD_SIZE_8BIT
-2 constant: SPI_WORD_SIZE_16BIT
-4 constant: SPI_WORD_SIZE_32BIT
 
-: spi-get-freq-div ( divider count -- freq ) 16 lshift swap 65535 and or ;
+: freq ( divider count -- freq ) 16 lshift swap 65535 and or ;
 
-5 2 spi-get-freq-div constant: SPI_FREQ_DIV_8M    \ < 8MHz
+5 2 freq constant: SPI_FREQ_DIV_8M    \ < 8MHz
 
 128 constant: DISPLAY_WIDTH
 64  constant: DISPLAY_HEIGHT
@@ -30,7 +27,7 @@ BUFFER_SIZE buffer: screen1
 screen1 init-variable: actual
 : screen ( -- buffer ) actual @ ;
 
-: display-setup-wiring
+: wire ( -- )
     DC GPIO_OUT gpio-mode
     RST GPIO_OUT gpio-mode
     DC  GPIO_LOW gpio-write
@@ -74,7 +71,7 @@ screen1 init-variable: actual
     10 ms
     RST GPIO_HIGH gpio-write ;
 
-: display-send-init-sequence ( -- )
+: init ( -- )
     174 write-command ( SSD1306_DISP_SLEEP )
     213 write-command ( SSD1306_SET_DISP_CLOCK )
     128 write-command
@@ -106,10 +103,7 @@ screen1 init-variable: actual
     7   write-command 
     1025 0 do 0 write-data loop ;
 
-: y>bitmask ( y -- bit-index )
-    7 and
-    1 swap lshift ;
-
+: y>bitmask ( y -- bit-index ) 7 and 1 swap lshift ;
 : xy-trunc ( x y -- x' y' ) swap 127 and swap 63 and ;
     
 : xy>i ( x y -- bit-mask buffer-index )
@@ -119,40 +113,14 @@ screen1 init-variable: actual
     3 rshift            \  8 /
     7 lshift + ;        \  DISPLAY_WIDTH * +
 
-: or! ( value addr -- )
-    tuck c@ or swap c! ;
-
-: and! ( value addr -- )
-    tuck c@ and swap c! ;
-
-: set-pixel ( x y -- )    
-    xy>i screen + or! ;
-
-: unset-pixel ( x y -- ) 
-    xy>i screen +
-    swap invert swap and! ;
-
-: pixel-set? ( x y -- )
-    xy>i screen +
-    c@ and 0<> ;
-
-: hline ( x y width -- )
-    0 do
-        2dup set-pixel { 1+ } dip
-    loop
-    2drop ;
-
-: rect-fill ( x y width height -- )
-    0 do
-        3dup hline { 1+ } dip
-    loop
-    3drop ;
-    
-: fill-buffer ( value -- ) 
-    BUFFER_SIZE 0 do 
-        dup i screen + c! 
-    loop 
-    drop ;
+: or! ( value addr -- ) tuck c@ or swap c! ;
+: and! ( value addr -- ) tuck c@ and swap c! ;
+: set-pixel ( x y -- )    xy>i screen + or! ;
+: unset-pixel ( x y -- ) xy>i screen + swap invert swap and! ;
+: pixel-set? ( x y -- ) xy>i screen + c@ and 0<> ;
+: hline ( x y width -- ) 0 do 2dup set-pixel { 1+ } dip loop 2drop ;
+: rect-fill ( x y width height -- ) 0 do 3dup hline { 1+ } dip loop 3drop ;
+: fill-buffer ( value -- ) BUFFER_SIZE 0 do dup i screen + c!  loop drop ;
 
 : display ( -- )
     SPI_WORD_SIZE_8BIT
@@ -167,14 +135,10 @@ screen1 init-variable: actual
 : display-clear ( -- ) 0 fill-buffer display ;
 
 : display-init ( -- | ESSD1306 )
-    display-setup-wiring
-    TRUE 0 ( little endian ) TRUE SPI_FREQ_DIV_8M SPI_MODE0 BUS 
-    spi-init 1 <> if
-        ESSD1306 throw
-    then
-    display-on
-    display-send-init-sequence
-    display-reset ;
+    wire
+    TRUE 0 ( little endian ) TRUE SPI_FREQ_DIV_8M 0 ( SPI_MODE0 ) BUS 
+    spi-init 1 <> if ESSD1306 throw then
+    display-on init display-reset ;
 
 0 init-variable: font
 0 init-variable: text-left
@@ -185,7 +149,6 @@ screen1 init-variable: actual
 : font-medium ( -- ) 2 font-size ! ;
 : font-big    ( -- ) 3 font-size ! ;
 : font-xbig   ( -- ) 4 font-size ! ;
-
 : draw-lf ( -- ) 9 text-top +! ;
 : draw-cr ( -- ) 0 text-left ! ;
 

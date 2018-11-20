@@ -65,7 +65,7 @@ exception: EHTTP
     swap netcon-dispose
     200 <> if EHTTP throw then ;
   
-: connect ( -- netconn ) 8080 "139.59.208.164" TCP netcon-connect ;      
+: connect ( -- netconn ) 8319 "zeroflag.dynu.net" TCP netcon-connect ;      
 : stock-fetch ( -- )
     connect
     dup "GET /stock/HDP HTTP/1.0\r\n\r\n" netcon-write
