@@ -17,16 +17,16 @@ Punyforth also runs on x86 (Linux), ARM (Raspberry PI) but these are *not* the p
 
 ## Quick start
 
-The easiest way to try out Punyforth is to use a ESP8266 based development board that has USB to serial interface on board (Geekcreit/Doit, Amica, WeMos, LoLin). Connect the development board to your computer via USB. Let's assume the serial port is COM3.
+The easiest way to try out Punyforth is to use a ESP8266 based development board that has USB to serial interface on board (Geekcreit/Doit, Amica, WeMos, LoLin). Connect the development board to your computer via USB. Let's assume the serial port is COM4.
 
 ```bash
 $ cd arch/esp8266/bin
-$ python flash.py COM3
+$ python flash.py COM4
 ```
 
 The flash.py utility will store the Punyforth binary and modules source code on the flash memory of the esp8266.
 
-Open a serial terminal<sup>[1](#serial)</sup> on port COM3 then type:
+Open a serial terminal<sup>[1](#serial)</sup> on port COM4 then type:
 
 ```forth
 println: "Hello world!"
