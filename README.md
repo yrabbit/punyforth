@@ -795,7 +795,7 @@ Punyforth supports cooperative multitasking which enables users to run more than
 In order to run some code in the background, one must create a new task first, using the *task:* parsing word. A tasks can be activated inside a word. This word usually does something in a loop and calls *pause* periodically to yield controll to other tasks.
 
 ```forth
-task: mytask
+0 task: mytask
 
 : my-word
   mytask activate
@@ -819,7 +819,7 @@ Often tasks need to communicate with each other. A mailbox is a fixed size block
 5 mailbox: mailbox1
 
 \ create a task for the consumer
-task: task-consumer
+0 task: task-consumer
 
 \ this word is executed by the task
 : consumer ( task -- )
