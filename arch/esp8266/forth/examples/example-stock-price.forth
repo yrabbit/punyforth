@@ -68,7 +68,7 @@ exception: EHTTP
 : connect ( -- netconn ) 8319 "zeroflag.dynu.net" TCP netcon-connect ;      
 : stock-fetch ( -- )
     connect
-    dup "GET /stock/HDP HTTP/1.0\r\n\r\n" netcon-write
+    dup "GET /stock/CLDR HTTP/1.0\r\n\r\n" netcon-write
     consume ;
 
 exception: ESTOCK
