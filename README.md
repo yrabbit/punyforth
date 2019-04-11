@@ -788,7 +788,7 @@ s.sendto(b'hello\r\n', ('192.168.0.15',8000))
 
 See [Simple HTTP Server](arch/esp8266/forth/examples/example-http-server.forth) for more information.
 
-### Tasks (experimental)
+### Tasks
 
 Punyforth supports cooperative multitasking which enables users to run more than one task simultaneously. For example one task may wait for input on a socket, while another one receives commands through the serial port. Punyforth never initiates a context switch by its own. Instead, tasks voluntarily yield control periodically using the word *pause*. Tasks are executed in a round robin fashion.
 
