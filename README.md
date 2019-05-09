@@ -36,7 +36,7 @@ println: "Hello world!"
 
 <a name="serial">1</a>: Baud rate: 115200 bps. Local echo: on, line mode: enabled. You can find some free terminal emulators [here](https://learn.sparkfun.com/tutorials/terminal-basics/all).
 
-Note that flash.py flashes with Quad I/O speed (qio) by default. This is the fastest mode but not all devices support this. If you have trouble while flashing try adding a --flashmode qio parameter.
+Note that flash.py flashes with Quad I/O speed (qio) by default. This is the fastest mode but not all devices support this. If you have trouble while flashing try adding a --flashmode dio parameter.
 
 ##### Now let's do some simple arithmetics.
 
