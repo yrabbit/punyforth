@@ -1,5 +1,5 @@
 import sys, os
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from argparse import ArgumentParser, RawDescriptionHelpFormatter, ArgumentTypeError
 
 START_ADDRESS   = 0x52000
 LAYOUT_ADDRESS  = 0x51000
@@ -193,7 +193,7 @@ class CommandLine:
     def to_bool(v):
         if v.lower() in ('yes', 'true', 'y', '1'): return True
         if v.lower() in ('no', 'false', 'n', '0'): return False
-        raise argparse.ArgumentTypeError('%s is not a boolean' % v)
+        raise ArgumentTypeError('%s is not a boolean' % v)
 
     def __init__(self):
         self.parser = ArgumentParser(description='Flash punyforth binaries and forth code.', epilog=self.examples(), formatter_class=RawDescriptionHelpFormatter)
