@@ -77,7 +77,7 @@ class Code:
     def validate(self, max_line_len):
         if any(len(line) > max_line_len for line in self.content.split('\n')):
             raise RuntimeError('Input overflow at line: "%s"' % [line for line in self.content.split('\n') if len(line) >= max_line_len][0])
-    
+
     def flash_usage(self):
         return (len(self.content) / SECTOR_SIZE + 1) * SECTOR_SIZE
 
@@ -104,7 +104,7 @@ class Modules:
         def __str__(self): return 'NONE'
 
     class Only:
-        def __init__(self, names): 
+        def __init__(self, names):
             self.names = set(each.lower() for each in names)
             self.names.add('core')
             self.names.add('app')
@@ -125,9 +125,9 @@ class Modules:
         return self
 
     def select(self, module_filter):
-        print 'Selected modules: %s' % module_filter
+        print('Selected modules: %s' % module_filter)
         self.module_filter = module_filter
-    
+
     def selected(self):
         return (each for each in self.modules if self.module_filter(each))
 
@@ -151,7 +151,7 @@ class Modules:
             result.append(code.flashable(address))
             address += code.flash_usage()
         return result
-    
+
 class Layout:
     @staticmethod
     def generate(flashables, block_format):
@@ -173,20 +173,21 @@ class Binaries:
     def flash(self, esp):
         print("Flashing binaries..")
         esp.write_flash_many(self.binaries)
-    
+
 class Esp:
     def __init__(self, port, flashmode):
         self.port = port
         self.flashmode = flashmode
 
     def write_flash(self, address, path):
-        print 'Flashing %s' % os.path.basename(path)
-        os.system("python esptool.py -p %s write_flash -fm %s -ff 40m 0x%x %s" % (self.port, self.flashmode, address, path))
+        print('Flashing %s' % os.path.basename(path))
+        os.system("esptool.py -p %s write_flash -fm %s -ff 40m 0x%x %s" % (self.port, self.flashmode, address, path))
 
     def write_flash_many(self, tupl):
         if not tupl: return
-        print 'Flashing %s' % ', '.join('0x%x: %s' % (address, os.path.basename(path)) for (address, path) in tupl)
-        os.system("python esptool.py -p %s write_flash -fs 32m -fm %s -ff 40m %s" % (self.port, self.flashmode, ' '.join("0x%x %s" % each for each in tupl)))
+        print('Flashing %s' % ', '.join('0x%x: %s' % (int(address), os.path.basename(path)) for (address, path) in tupl))
+
+        os.system("esptool.py -p %s write_flash -fs 32m -fm %s -ff 40m %s" % (self.port, self.flashmode, ' '.join("0x%x %s" % (int(a),p) for a,p in tupl)))
 
 class CommandLine:
     @staticmethod
@@ -218,7 +219,7 @@ Flash all modules, binaries and use myapp.forth as an entry point:
 
 Available modules:\n%s
         """ % '\n'.join("\t* %s" % each[1] for each in AVAILABLE_MODULES)
-    
+
     def parse(self):
         args = self.parser.parse_args()
         args.modules = self.modules(args)
